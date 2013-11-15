@@ -13,11 +13,12 @@ const int SCREEN_BPP = 32;
 
 const int FRAMES_PER_SECOND = 30;
 
-const int SHIP_WIDTH = 20;
-const int SHIP_HEIGHT = 20;
+const int SHIP_WIDTH = 32;
+const int SHIP_HEIGHT = 32;
 
 SDL_Surface *ship = NULL;
 SDL_Surface *screen = NULL;
+SDL_Surface *background = NULL;
 
 SDL_Event event;
 
@@ -67,7 +68,8 @@ SDL_Surface *load_image( std::string filename )
 		SDL_FreeSurface( loadedImage );
 		if( optimizedImage != NULL )
 		{
-			SDL_SetColorKey( optimizedImage, SDL_SRCCOLORKEY, SDL_MapRGB( optimizedImage->format, 0, 0xFF, 0xFF ) );
+			Uint32 colorkey = SDL_MapRGB( optimizedImage->format, 100, 100, 100 );
+			SDL_SetColorKey( optimizedImage, SDL_SRCCOLORKEY, colorkey );
 		}
 	}
 	return optimizedImage;
@@ -103,18 +105,24 @@ bool init()
 
 bool load_files()
 {
-	ship = load_image( "shmupShip.png" ) ;
+	ship = load_image( "shmupShip.png" );
 	if( ship == NULL )
 	{
 		return false;
 	}
 
+	background = load_image( "background.png" );
+	if( background == NULL )
+	{
+		return false;
+	}
 	return true;
 }	
 
 void clean_up()
 {
 	SDL_FreeSurface( ship );
+	SDL_FreeSurface( background );
 	SDL_Quit();
 }
 
@@ -267,6 +275,7 @@ int main( int argc, char* args[] )
 		
 		myShip.move();
 		SDL_FillRect( screen, &screen->clip_rect, SDL_MapRGB( screen->format, 0xFF, 0xFF, 0xFF ) );
+		apply_surface(0, 0, background, screen );
 		myShip.show();
 
 		if( SDL_Flip( screen ) == -1 )
