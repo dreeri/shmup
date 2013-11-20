@@ -22,11 +22,14 @@ SDL_Surface *background = NULL;
 
 SDL_Event event;
 
+//Test wall
+SDL_Rect wall;
+
 //The player
 class Ship
 {
 	private:
-	int x, y;
+	SDL_Rect box;
 	int xVel, yVel;
 
 	public:
@@ -35,6 +38,47 @@ class Ship
 	void move();
 	void show();
 };
+
+//Collision
+bool check_collision( SDL_Rect A, SDL_Rect B )
+{
+	int leftA, leftB;
+	int rightA, rightB;
+	int topA, topB;
+	int bottomA, bottomB;
+
+	leftA = A.x;
+	rightA = A.x + A.w;
+	topA = A.y;
+	bottomA = A.y + A.h;
+
+	leftB = B.x;
+	rightB = B.x + B.w;
+	topB = B.y;
+	bottomB = B.y + B.h;
+
+	if( bottomA <= topB )
+	{
+		return false;
+	}
+
+	if( topA >= bottomB )
+	{
+		return false;
+	}
+
+	if( rightA <= leftB )
+	{
+		return false;
+	}
+
+	if( leftA >= rightB )
+	{
+		return false;
+	}
+
+	return true;
+}
 
 //Timer for ingame calc
 class Timer
@@ -128,8 +172,10 @@ void clean_up()
 
 Ship::Ship()
 {
-	x = 0;
-	y = 0;
+	box.x = 0;
+	box.y = 0;
+	box.w = SHIP_WIDTH;
+	box.h = SHIP_HEIGHT;
 	xVel = 0;
 	yVel = 0;
 }
@@ -160,22 +206,22 @@ void Ship::handle_input()
 
 void Ship::move()
 {
-	x += xVel;
-	if( ( x < 0 ) || ( x + SHIP_WIDTH > SCREEN_WIDTH ) )
+	box.x += xVel;
+	if( ( box.x < 0 ) || ( box.x + SHIP_WIDTH > SCREEN_WIDTH ) || ( check_collision( box, wall ) ) )
 	{
-		x -= xVel;
+		box.x -= xVel;
 	}
 
-	y += yVel;
-	if( ( y < 0 ) || ( y + SHIP_HEIGHT > SCREEN_HEIGHT ) )
+	box.y += yVel;
+	if( ( box.y < 0 ) || ( box.y + SHIP_HEIGHT > SCREEN_HEIGHT ) || ( check_collision( box, wall ) ) )
 	{
-		y -= yVel;
+		box.y -= yVel;
 	}
 }
 
 void Ship::show()
 {
-	apply_surface( x, y, ship, screen );
+	apply_surface( box.x, box.y, ship, screen );
 }
 
 Timer::Timer()
@@ -260,6 +306,12 @@ int main( int argc, char* args[] )
 		return 1;
 	}
 
+	//Test wall
+	wall.x = 300;
+	wall.y = 40;
+	wall.w = 40;
+	wall.h = 400;
+
 	while( quit == false )
 	{
 		fps.start();
@@ -276,6 +328,10 @@ int main( int argc, char* args[] )
 		myShip.move();
 		SDL_FillRect( screen, &screen->clip_rect, SDL_MapRGB( screen->format, 0xFF, 0xFF, 0xFF ) );
 		apply_surface(0, 0, background, screen );
+		
+		//Test wall
+		SDL_FillRect( screen, &wall, SDL_MapRGB( screen->format, 0x77, 0x77, 0x77 ) );
+
 		myShip.show();
 
 		if( SDL_Flip( screen ) == -1 )
